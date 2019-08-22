@@ -1,0 +1,173 @@
+{% extends 'layouts/layout_home.html' %}
+{% block title %}
+Activate service | {{ config['PUBLIC_CONFIG'].site.title }}
+{% endblock %}
+
+{% block content %}
+<div class="panel panel-default">
+    <div class="panel-heading">
+        <h1 class="panel-title">
+            <div class="col-md-11">
+                <a href="{{ url_for('HomeView:index') }}">{{ config['PUBLIC_CONFIG'].site.title }}</a>
+            </div>
+            <div>Version: {{ config['PUBLIC_CONFIG'].project.version }}</div>
+        </h1>
+    </div>
+    <div class="panel-body">
+        <div class="container-fluid">
+            <div class="row well">
+                <div class="col-md-8">
+                    <p>{% trans %}Subscribers{% endtrans %}</p>
+                </div>
+                <div class="col-md-2">
+                    <a href="{{ url_for('ProviderView:dashboard') }}" role="button" class="btn btn-info">
+                        {% trans %}Dashboard{% endtrans %}
+                    </a>
+                </div>
+                <div class="col-md-2">
+                    <a href="{{ url_for('ProviderView:logout') }}" class="btn btn-warning" role="button">
+                        {% trans %}Logout{% endtrans %}
+                    </a>
+                </div>
+            </div>
+            <div class="row well">
+                <table id='subscribers_table' class="table">
+                    <thead>
+                    <tr>
+                        <th class="stream_number">#</th>
+                        <th class="stream_name">{% trans %}Email{% endtrans %}</th>
+                        <th class="provider_status">{% trans %}Create date{% endtrans %}</th>
+                        <th class="stream_name">{% trans %}Status{% endtrans %}</th>
+                        <th class="stream_actions">{% trans %}Actions{% endtrans %}</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for subscriber in server.subscribers %}
+                    <tr id='{{ subscriber.id }}'>
+                        <td>{{ loop.index }}</td>
+                        <td>
+                            {{ subscriber.email }}
+                        </td>
+                        <td>
+                            {{ subscriber.created_date }}
+                        </td>
+                        <td>
+                            {{ ['NOT_ACTIVE', 'ACTIVE', 'TRIAL_FINISHED', 'BANNED'][subscriber.status] }}
+                        </td>
+                        <td>
+                            <button type="submit" class="btn btn-success btn-xs"
+                                    onclick="edit_subscriber('{{ subscriber.id }}')">
+                                {% trans %}Edit{% endtrans %}
+                            </button>
+                            <button type="submit" class="btn btn-danger btn-xs"
+                                    onclick="remove_subscriber('{{ subscriber.id }}')">
+                                {% trans %}Remove{% endtrans %}
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="row">
+                <button type="submit" class="btn btn-success col-md-12"
+                        onclick="add_subscriber_to_server('{{ server.id }}')">
+                    {% trans %}Add subscriber{% endtrans %}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="service_dialog" class="modal fade" tabindex=-1 role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+        </div>
+    </div>
+</div>
+{%- endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script type="text/javascript" charset="utf-8">
+    function add_subscriber_to_server_entry(url) {
+        $.ajax({
+            url: url,
+            type: "POST",
+            dataType: 'json',
+            data: $('#subscriber_entry_form').serialize(),
+            success: function (response) {
+                console.log(response);
+                $('#service_dialog').modal('hide');
+                window.location.reload();
+            },
+            error: function (error) {
+                console.error(error);
+                $('#service_dialog .modal-content').html(data);
+            }
+        });
+    }
+
+    function add_subscriber_to_server(sid) {
+        var url = "/service/subscriber/add/" + sid;
+        $.get(url, function(data) {
+            $('#service_dialog .modal-content').html(data);
+            $('#service_dialog').modal();
+
+            $('#apply').click(function(event) {
+                event.preventDefault();
+                add_subscriber_to_server_entry(url);
+            })
+        });
+    }
+
+    function edit_subscriber_entry(url) {
+        $.ajax({
+            url: url,
+            type: "POST",
+            dataType: 'json',
+            data: $('#subscriber_entry_form').serialize(),
+            success: function (response) {
+                console.log(response);
+                $('#service_dialog').modal('hide');
+                window.location.reload();
+            },
+            error: function (error) {
+                console.error(error);
+                $('#service_dialog .modal-content').html(data);
+            }
+        });
+    }
+
+    function edit_subscriber(sid) {
+        var url = "/service/subscriber/edit/" + sid;
+        $.get(url, function(data) {
+            $('#service_dialog .modal-content').html(data);
+            $('#service_dialog').modal();
+
+            $('#apply').click(function(event) {
+                event.preventDefault();
+                edit_subscriber_entry(url);
+            })
+        });
+    }
+
+    function remove_subscriber(sid) {
+        var url = "/service/subscriber/remove";
+        $.ajax({
+            url: "{{ url_for('ServiceView:remove_subscriber') }}",
+            type: "POST",
+            contentType : 'application/json',
+            data: JSON.stringify({"sid":sid}),
+            success: function (response) {
+                console.log(response);
+                window.location.reload();
+            },
+            error: function (error) {
+                console.error(error);
+            }
+        });
+    }
+
+
+</script>
+{%- endblock %}
