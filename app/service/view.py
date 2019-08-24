@@ -96,7 +96,7 @@ class ServiceView(FlaskView):
 
                 tvg_logo = file['tvg-logo']
                 if len(tvg_logo) < constants.MAX_URL_LENGTH:
-                    if is_valid_http_url(tvg_logo):
+                    if is_valid_http_url(tvg_logo, timeout=0.1):
                         stream.tvg_logo = tvg_logo
                 stream.save()
                 streams.append(stream)
