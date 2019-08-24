@@ -36,6 +36,7 @@ class ServiceView(FlaskView):
         if server and form.validate_on_submit():
             stream_type = form.type.data
             file_handle = form.file.data
+            tags = form.tags.data
             m3u_parser = M3uParser()
             m3u_parser.load_content(file_handle.read().decode('utf-8'))
             m3u_parser.parse()
@@ -75,6 +76,7 @@ class ServiceView(FlaskView):
                     stream.input.urls[0].uri = input_url
 
                 stream.tvg_logo = default_logo_path
+                stream.tags = tags
 
                 title = file['title']
                 if len(title) < constants.MAX_STREAM_NAME_LENGTH:
